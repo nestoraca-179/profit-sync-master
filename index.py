@@ -2,6 +2,7 @@
 import client
 import invoice
 import sale_doc
+import buy_doc
 import order
 import reng_invoice
 import collect
@@ -10,14 +11,16 @@ import messages as msg
 import sync_manager as sm
 
 # librerias
-import pyodbc
 import time
+import pyodbc
 import threading
 from datetime import datetime
 
 # variables
-items_total_inv = []
-items_saldo_doc = []
+items_total_inv_v = []
+items_saldo_doc_v = []
+items_total_inv_c = []
+items_saldo_doc_c = []
 
 # conexiones
 connect_main = {
@@ -127,20 +130,6 @@ def main():
                     if result == 1 or result == 2:
                         sync_manager.update_item('ItemsEliminar', item.ID)
 
-                elif item.Tipo == "COBDR": # COBRO DOC RENGLON
-
-                    index = str.rfind(item.ItemID, '-')
-                    cob = item.ItemID[0:index]
-                    reng = item.ItemID[index + 1:]
-
-                    c = collect.search_collect(cursor_main, cob)
-
-                    if c is None: # El cobro no esta en la base principal
-                        msg.print_item_not_found('El renglón DOC no puede ser eliminado ya que el cobro', cob)
-                        sync_manager.delete_item('ItemsEliminar', item.ID)
-                    else:
-                        print('FUNCION POR DEFINIR')
-
                 elif item.Tipo == "COBTR": # COBRO TP RENGLON
 
                     index = str.rfind(item.ItemID, '-')
@@ -203,7 +192,7 @@ def main():
                     else:
 
                         if item.CampoModificado == "total_neto" and item.AntiguoValor > item.NuevoValor:
-                            items_total_inv.append(item)
+                            items_total_inv_v.append(item)
                         else:
 
                             result = invoice.update_invoice(item, connect_sec)
@@ -241,7 +230,7 @@ def main():
                     else:
 
                         if item.CampoModificado == "saldo" and item.AntiguoValor < item.NuevoValor:
-                            items_saldo_doc.append(item)
+                            items_saldo_doc_v.append(item)
                         else:
 
                             result = sale_doc.update_sale_doc(item, 'FACT', connect_sec)
@@ -352,19 +341,37 @@ def main():
                             sync_manager.update_item('ItemsModificar', item.ID)
             
             # modificando campo total neto en tabla factura de venta
-            for total_inv in items_total_inv:
+            for total_inv in items_total_inv_v:
             
-                result = sale_doc.update_sale_doc(total_inv, 'FACT', connect_sec)
+                result = invoice.update_sale_invoice(total_inv, 'FACT', connect_sec)
                 msg.print_msg_result_update('Factura', total_inv.ItemID, total_inv.CampoModificado, 'a', result)
 
                 if result == 1:
                     sync_manager.update_item('ItemsModificar', total_inv.ID)
             
             # modificando campo saldo en tabla documento de venta
-            for saldo_doc in items_saldo_doc:
+            for saldo_doc in items_saldo_doc_v:
             
                 result = sale_doc.update_sale_doc(saldo_doc, 'FACT', connect_sec)
                 msg.print_msg_result_update('Documento de venta de la factura', saldo_doc.ItemID, saldo_doc.CampoModificado, 'o', result)
+
+                if result == 1:
+                    sync_manager.update_item('ItemsModificar', saldo_doc.ID)
+
+            # modificando campo total neto en tabla factura de compra
+            for total_inv in items_total_inv_c:
+            
+                result = invoice.update_buy_invoice(total_inv, connect_sec)
+                msg.print_msg_result_update('Factura', total_inv.ItemID, total_inv.CampoModificado, 'a', result)
+
+                if result == 1:
+                    sync_manager.update_item('ItemsModificar', total_inv.ID)
+
+            # modificando campo saldo en tabla documento de compra
+            for saldo_doc in items_saldo_doc_c:
+            
+                result = buy_doc.update_buy_doc(saldo_doc, 'FACT', connect_sec)
+                msg.print_msg_result_update('Documento de compra de la factura', saldo_doc.ItemID, saldo_doc.CampoModificado, 'o', result)
 
                 if result == 1:
                     sync_manager.update_item('ItemsModificar', saldo_doc.ID)
