@@ -407,7 +407,7 @@ def main():
                 elif item.Tipo == "FV": # FACTURA VENTA
 
                     # busca la factura en la base principal
-                    i = invoice.search_invoice(cursor_main, item.ItemID)
+                    i = invoice.search_sale_invoice(cursor_main, item.ItemID)
 
                     if i is None: # error si la factura no esta en la base principal
                         msg.print_item_not_found('La factura', item.ItemID)
@@ -418,7 +418,7 @@ def main():
                         doc = sale_doc.search_sale_doc(cursor_main, 'FACT', item.ItemID) # documento de venta de la factura
 
                         # se intenta registrar la factura
-                        result = invoice.insert_invoice(i, items, doc, connect_sec)
+                        result = invoice.insert_sale_invoice(i, items, doc, connect_sec)
                         msg.print_msg_result_insert('Factura', item.ItemID, 'a', result)
 
                         # se actualiza el registro en profit sync

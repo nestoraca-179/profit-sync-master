@@ -120,7 +120,7 @@ def delete_reng_invoice (fact, reng, connect_sec):
             sp_r = f"""exec pEliminarRenglonesFacturaVenta @sdoc_numori = ?, @ireng_numori = ?, @sco_us_mo = ?, @smaquina = ?, 
                 @sco_sucu_mo = ?, @growguid = ?
             """
-            sp_r_params = (fact, reng, 'SYNC', socket.gethostname(), None, r.rowguid)
+            sp_r_params = (fact, reng, 'SYNC', socket.gethostname(), r.co_sucu_mo, r.rowguid)
 
             try:
                 # ejecucion de script
@@ -143,8 +143,14 @@ def search_reng_invoice (cursor: Cursor, id, reng):
 
     return new_reng
 
-def search_all_invoice_items (cursor: Cursor, id):
-    cursor.execute(f"select * from saFacturaVentaReng where doc_num = '{id}'")
+def search_all_invoice_items (cursor: Cursor, id, type):
+
+    if type == 'V':
+        table = "saFacturaVentaReng"
+    elif type == 'C':
+        table = "saFacturaCompraReng"
+
+    cursor.execute(f"select * from {table} where doc_num = '{id}'")
     items = cursor.fetchall()
 
     return items

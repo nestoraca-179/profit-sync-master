@@ -3,7 +3,7 @@ import messages as msg
 from datetime import datetime
 
 connect_sync = {
-    "server": "172.16.10.20\SQLS2014STD",
+    "server": "IT-MOV-91\SQLS2014SE",
     "database": "ProfitSync",
     "username": "sa",
     "password": "Soporte123456"
@@ -12,7 +12,7 @@ connect_sync = {
 class SyncManager:
 
     def __init__(self):
-        self.con_sync = pyodbc.connect(f'DRIVER={{SQL Server}}; SERVER={connect_sync["server"]}; DATABASE={connect_sync["database"]}; UID={connect_sync["username"]}; PWD={connect_sync["password"]}')
+        self.con_sync = pyodbc.connect(f'DRIVER={{ODBC Driver 17 for SQL Server}}; SERVER={connect_sync["server"]}; DATABASE={connect_sync["database"]}; UID={connect_sync["username"]}; PWD={connect_sync["password"]}')
         self.cursor = self.con_sync.cursor()
 
     def get_items_delete(self):
